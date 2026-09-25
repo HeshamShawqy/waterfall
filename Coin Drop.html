@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Coin drop: impact form study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#e7e5e1;--panel:#f4f3f1;--ink:#2a2a28;--muted:#6f6c66;--line:#d3d0ca;--water:#3f6f86;--coin:#c9a24a;--ground:#c4baa9;--pit:#a39a8c;--accent:#8a6f4e;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1f1e1c;--panel:#282725;--ink:#e8e5e0;--muted:#a19c93;--line:#3b3935;--water:#6f9fb5;--coin:#d4ae55;--ground:#8f8779;--pit:#5f584e;--accent:#b99a73;}}
+:root[data-theme="dark"]{--bg:#1f1e1c;--panel:#282725;--ink:#e8e5e0;--muted:#a19c93;--line:#3b3935;--water:#6f9fb5;--coin:#d4ae55;--ground:#8f8779;--pit:#5f584e;--accent:#b99a73;}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;overflow:hidden}
+#view{flex:1;position:relative;min-width:0}
+#view canvas{display:block;width:100%;height:100%;touch-action:none}
+.title{position:absolute;left:20px;top:16px;pointer-events:none;max-width:60ch}
+.title h1{font-stretch:75%;font-weight:700;font-size:2rem;line-height:1;margin:0;letter-spacing:-.01em}
+.title p{margin:.35rem 0 0;color:var(--muted);font-size:.9rem}
+#stat{position:absolute;left:20px;bottom:14px;color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+aside{width:300px;background:var(--panel);border-left:1px solid var(--line);padding:18px 18px 24px;overflow-y:auto}
+aside h2{font-size:.95rem;font-weight:600;margin:1.2rem 0 .6rem}
+aside h2:first-child{margin-top:0}
+label.row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:.85rem;margin-bottom:.7rem}
+label.row output{color:var(--muted);font-variant-numeric:tabular-nums}
+label.row input{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-bottom:.7rem}
+.seg.three{grid-template-columns:1fr 1fr 1fr}
+.seg button{border:0;background:transparent;color:var(--ink);padding:8px;font:inherit;font-size:.85rem;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.4rem}
+.actions button{font:inherit;font-size:.9rem;padding:10px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.actions .primary{grid-column:1/-1;background:var(--ink);border-color:var(--ink);color:var(--panel);font-weight:600;font-size:1rem;padding:12px}
+.actions .primary:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+.note{font-size:.78rem;color:var(--muted);line-height:1.45;margin:.8rem 0 0}
+@media (max-width:760px){
+ body{flex-direction:column}
+ aside{width:auto;border-left:0;border-top:1px solid var(--line);max-height:46%;padding:14px 16px 18px}
+ .title h1{font-size:1.5rem}.title{left:14px;top:10px}.title p{display:none}
+ #stat{left:14px;bottom:8px}
+}
+aside{display:flex;flex-direction:column;padding:0 !important;overflow:hidden !important}
+.groups{flex:1;overflow-y:auto;padding:8px 18px 12px}
+.dock{border-top:1px solid var(--line);padding:12px 18px 14px}
+.dock .actions{margin-top:0}
+.dock .note:empty{display:none}
+details{border-bottom:1px solid var(--line)}
+summary{list-style:none;cursor:pointer;font-weight:600;font-size:.95rem;padding:12px 0;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:7px;height:7px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details[open] summary::after{transform:rotate(-135deg)}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grp{padding:2px 0 10px}
+@media (prefers-reduced-motion:reduce){summary::after{transition:none}}
+.seg.four{grid-template-columns:repeat(4,1fr)}
+#tl{position:absolute;left:20px;right:20px;bottom:12px;display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px}
+#tl input{flex:1;accent-color:var(--accent)}
+#tl span{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums;min-width:9ch;text-align:right}
+#tl:not([hidden])~#stat,#stat:has(~#tl:not([hidden])){bottom:62px}
+#matrow[hidden]{display:none}
+</style></head>
+<body>
+<div id="view">
+ <div id="stat"></div>
+ <div id="tl" hidden><input id="tlr" type="range" min="0" max="0" step="1" value="0" aria-label="Timeline"><span id="tltime"></span></div>
+</div>
+<aside>
+ <div class="groups">
+ <details open><summary>Medium</summary><div class="grp">
+ <div class="seg four" role="group" aria-label="Medium"><button data-med="0" aria-pressed="true">Water</button><button data-med="1" aria-pressed="false">Viscous</button><button data-med="2" aria-pressed="false">Sand</button><button data-med="3" aria-pressed="false">Clay</button></div>
+ <label class="row" id="matrow"><span id="matlabel">Viscosity</span><output id="o-mat"></output><input id="mat" type="range" min="0" max="1" step="0.01" value="0.5"></label>
+ </div></details>
+ <details open><summary>Coins</summary><div class="grp">
+ <label class="row">Number of coins<output id="o-cnt"></output><input id="cnt" type="range" min="1" max="12" step="1" value="5"></label>
+ <label class="row">Smallest diameter<output id="o-dmin"></output><input id="dmin" type="range" min="0.06" max="0.22" step="0.005" value="0.09"></label>
+ <label class="row">Largest diameter<output id="o-dmax"></output><input id="dmax" type="range" min="0.06" max="0.22" step="0.005" value="0.16"></label>
+ <label class="row">Weight<output id="o-wgt"></output><input id="wgt" type="range" min="1.5" max="12" step="0.5" value="7"></label>
+ </div></details>
+ <details open><summary>Drop</summary><div class="grp">
+ <label class="row">Height above ground<output id="o-hgt"></output><input id="hgt" type="range" min="0.05" max="2.5" step="0.01" value="0.6"></label>
+ <label class="row">Maximum tilt<output id="o-tlt"></output><input id="tlt" type="range" min="0" max="80" step="1" value="30"></label>
+ <label class="row">Scatter<output id="o-sct"></output><input id="sct" type="range" min="0" max="1.6" step="0.05" value="0.8"></label>
+ <label class="row">Time between drops<output id="o-int"></output><input id="int" type="range" min="0" max="0.6" step="0.02" value="0.12"></label>
+ <div class="actions"><button id="shuffle" style="grid-column:1/-1">Shuffle layout</button></div>
+ </div></details>
+ <details><summary>Pit</summary><div class="grp">
+ <p class="note" style="margin:0 0 .6rem">6 m deep, filled to the brim.</p>
+ <label class="row">Pit diameter<output id="o-pr"></output><input id="pr" type="range" min="0.12" max="0.42" step="0.01" value="0.26"></label>
+ </div></details>
+ <details><summary>Crown</summary><div class="grp">
+ <label class="row">Surface tension<output id="o-sig"></output><input id="sig" type="range" min="0" max="0.03" step="0.001" value="0"></label>
+ <label class="row">Crown fingers<output id="o-fng"></output><input id="fng" type="range" min="4" max="32" step="1" value="16"></label>
+ <label class="row">Finger strength<output id="o-fst"></output><input id="fst" type="range" min="0" max="2" step="0.05" value="0"></label>
+ </div></details>
+ <details><summary>Site and simulation</summary><div class="grp">
+ <div class="seg" role="group" aria-label="Container"><button id="c-open" aria-pressed="true">Open pit</button><button id="c-tube" aria-pressed="false">Tube</button></div>
+ <div class="seg three" role="group" aria-label="Resolution"><button data-n="40" aria-pressed="false">Draft</button><button data-n="48" aria-pressed="true">Standard</button><button data-n="60" aria-pressed="false">Fine</button></div>
+ <label class="row">Simulation speed<output id="o-spd"></output><input id="spd" type="range" min="1" max="60" step="1" value="20"></label>
+ </div></details>
+ </div>
+ <div class="dock">
+ <div class="actions">
+  <button id="drop" class="primary">Drop coins</button>
+  <button id="pause">Pause</button>
+  <button id="reset">Reset</button>
+  <button id="export" style="grid-column:1/-1">Export frame for Rhino</button>
+ </div>
+ <p class="note" id="note" aria-live="polite"></p>
+ </div>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+// ---------- MLS-MPM water + many rigid coins, two-way coupled ----------
+function createSim(N, geo) {
+  geo = geo || { R: 0.26, depth: 0.24, water: 0.75 };
+  const DX = 1 / N, INV = N, E = 300, G = 9.8;
+  const DT = 0.35 * DX / Math.sqrt(E);
+  const PVOL = Math.pow(DX * 0.55, 3), PMASS = PVOL;
+  const PB = 0.06, R = geo.R, GY = PB + geo.depth, WL = PB + geo.water * geo.depth;
+  const H = Math.max(1, geo.H || 1), NY = Math.ceil(N * H), HY = NY / N;
+  const NN = N * NY * N;
+  const gm = new Float32Array(NN), gx = new Float32Array(NN), gy = new Float32Array(NN), gz = new Float32Array(NN);
+  const nodeFlag = new Uint8Array(NN), nodeN = new Float32Array(NN * 3);
+  let P = 0, px, py, pz, vx, vy, vz, C, Jp, spd;
+  let tube = false, time = 0, stepCount = 0, dropTime = -1;
+  let coins = [], contacted = false;
+
+  // desert terrain: height above the pit rim level, flattened near the pit
+  function dune(x, z) {
+    const t = x * 1.8 + 0.22 * Math.sin(z * 4.0) + 0.35 * z;
+    return 0.028 * Math.pow(Math.abs(Math.sin(Math.PI * t)), 1.6) + 0.007 * Math.sin(5.3 * z + 2 * x) + 0.004 * Math.sin(11 * x - 7 * z) + 0.01;
+  }
+  function terrainY(x, z) {
+    const r = Math.hypot(x - 0.5, z - 0.5);
+    let k = (r - R - 0.015) / 0.12; k = k < 0 ? 0 : k > 1 ? 1 : k; k = k * k * (3 - 2 * k);
+    return GY + k * dune(x, z);
+  }
+  function envSdf(x, y, z) {
+    const r = Math.hypot(x - 0.5, z - 0.5);
+    const col = Math.min(R - r, y - PB);
+    return tube ? col : Math.max(col, (y - terrainY(x, z)) * 0.9);
+  }
+  function envNormal(x, y, z, out) {
+    const e = 1e-3;
+    const nx = envSdf(x + e, y, z) - envSdf(x - e, y, z);
+    const ny = envSdf(x, y + e, z) - envSdf(x, y - e, z);
+    const nz = envSdf(x, y, z + e) - envSdf(x, y, z - e);
+    const l = Math.hypot(nx, ny, nz) || 1;
+    out[0] = nx / l; out[1] = ny / l; out[2] = nz / l;
+  }
+  const tmpN = [0, 0, 0];
+  function buildNodes() {
+    nodeFlag.fill(0);
+    for (let i = 0; i < N; i++) for (let j = 0; j < NY; j++) for (let k = 0; k < N; k++) {
+      const x = i * DX, y = j * DX, z = k * DX, d = envSdf(x, y, z);
+      if (d < DX * 0.5) {
+        const id = (i * NY + j) * N + k;
+        nodeFlag[id] = d < -1.5 * DX ? 2 : 1;
+        envNormal(x, y, z, tmpN);
+        nodeN[id * 3] = tmpN[0]; nodeN[id * 3 + 1] = tmpN[1]; nodeN[id * 3 + 2] = tmpN[2];
+      }
+    }
+  }
+  function resetWater() {
+    const s = DX * 0.55, pts = [];
+    for (let x = 0.5 - R; x <= 0.5 + R; x += s)
+      for (let z = 0.5 - R; z <= 0.5 + R; z += s) {
+        if (Math.hypot(x - 0.5, z - 0.5) > R - s * 0.6) continue;
+        for (let y = PB + s * 0.6; y < WL; y += s)
+          pts.push(x + (Math.random() - 0.5) * 0.2 * s, y + (Math.random() - 0.5) * 0.2 * s, z + (Math.random() - 0.5) * 0.2 * s);
+      }
+    P = pts.length / 3;
+    px = new Float32Array(P); py = new Float32Array(P); pz = new Float32Array(P);
+    vx = new Float32Array(P); vy = new Float32Array(P); vz = new Float32Array(P);
+    C = new Float32Array(P * 9); Jp = new Float32Array(P).fill(1); spd = new Float32Array(P);
+    for (let p = 0; p < P; p++) { px[p] = pts[3 * p]; py[p] = pts[3 * p + 1]; pz[p] = pts[3 * p + 2]; }
+    time = 0; dropTime = -1; contacted = false;
+  }
+
+  // ---- rigid coin helpers ----
+  function quatToMat(q, m) {
+    const [x, y, z, w] = q;
+    m[0] = 1 - 2 * (y * y + z * z); m[1] = 2 * (x * y - z * w); m[2] = 2 * (x * z + y * w);
+    m[3] = 2 * (x * y + z * w); m[4] = 1 - 2 * (x * x + z * z); m[5] = 2 * (y * z - x * w);
+    m[6] = 2 * (x * z - y * w); m[7] = 2 * (y * z + x * w); m[8] = 1 - 2 * (x * x + y * y);
+  }
+  function Iinv(cn, v, out) {
+    const m = cn.Rm;
+    const b0 = (m[0] * v[0] + m[3] * v[1] + m[6] * v[2]) / cn.Ib[0];
+    const b1 = (m[1] * v[0] + m[4] * v[1] + m[7] * v[2]) / cn.Ib[1];
+    const b2 = (m[2] * v[0] + m[5] * v[1] + m[8] * v[2]) / cn.Ib[2];
+    out[0] = m[0] * b0 + m[1] * b1 + m[2] * b2;
+    out[1] = m[3] * b0 + m[4] * b1 + m[5] * b2;
+    out[2] = m[6] * b0 + m[7] * b1 + m[8] * b2;
+  }
+  const omega = (cn, out) => Iinv(cn, cn.L, out);
+  function discSdf(cn, lx, ly, lz) {
+    const q = Math.hypot(lx, lz) - cn.a, ay = Math.abs(ly) - cn.h / 2;
+    return Math.hypot(Math.max(q, 0), Math.max(ay, 0)) + Math.min(Math.max(q, ay), 0);
+  }
+  function discNormalWorld(cn, lx, ly, lz, out) {
+    const e = DX * 0.2, m = cn.Rm;
+    let nx = discSdf(cn, lx + e, ly, lz) - discSdf(cn, lx - e, ly, lz);
+    let ny = discSdf(cn, lx, ly + e, lz) - discSdf(cn, lx, ly - e, lz);
+    let nz = discSdf(cn, lx, ly, lz + e) - discSdf(cn, lx, ly, lz - e);
+    const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    out[0] = m[0] * nx + m[1] * ny + m[2] * nz; out[1] = m[3] * nx + m[4] * ny + m[5] * nz; out[2] = m[6] * nx + m[7] * ny + m[8] * nz;
+  }
+  function toLocal(cn, x, y, z, out) {
+    const m = cn.Rm, rx = x - cn.c[0], ry = y - cn.c[1], rz = z - cn.c[2];
+    out[0] = m[0] * rx + m[3] * ry + m[6] * rz; out[1] = m[1] * rx + m[4] * ry + m[7] * rz; out[2] = m[2] * rx + m[5] * ry + m[8] * rz;
+  }
+  function sampleWorld(cn, s, out) {
+    const m = cn.Rm, lx = s[0] * cn.a, ly = s[1] * cn.h / 2, lz = s[2] * cn.a;
+    out[0] = m[0] * lx + m[1] * ly + m[2] * lz; out[1] = m[3] * lx + m[4] * ly + m[5] * lz; out[2] = m[6] * lx + m[7] * ly + m[8] * lz;
+  }
+  const samples = [];
+  for (let k = 0; k < 12; k++) { const t = k / 12 * Math.PI * 2; samples.push([Math.cos(t), 1, Math.sin(t)], [Math.cos(t), -1, Math.sin(t)]); }
+  samples.push([0, 1, 0], [0, -1, 0], [0.5, 1, 0], [-0.5, 1, 0], [0, 1, 0.5], [0, 1, -0.5], [0.5, -1, 0], [-0.5, -1, 0], [0, -1, 0.5], [0, -1, -0.5]);
+
+  function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+  // o: {count, dmin, dmax, weight, height, tilt, scatter, interval, seed}
+  function setCoins(o) {
+    const rand = rng(o.seed), h = Math.max(1.3 * DX, 0.028);
+    const dmin = Math.min(o.dmin, o.dmax), dmax = Math.max(o.dmin, o.dmax);
+    coins = [];
+    const order = [];
+    for (let i = 0; i < o.count; i++) {
+      const a = (dmin + (dmax - dmin) * rand()) / 2;
+      const M = o.weight * Math.PI * a * a * h;
+      const cn = { a, h, M, Ib: [M * (3 * a * a + h * h) / 12, M * a * a / 2, M * (3 * a * a + h * h) / 12],
+        c: [0.5, GY + o.height, 0.5], v: [0, 0, 0], L: [0, 0, 0], q: [0, 0, 0, 1], Rm: new Float64Array(9), dropped: false, release: 0, trail: [] };
+      // fixed random draws per coin, so moving Scatter only scales the same pattern outward
+      const ur = Math.sqrt((i + 0.5) / o.count) * (0.85 + 0.15 * rand()), uth = i * 2.39996 + rand() * 0.6;
+      let maxR = Math.min(o.scatter * R, 0.5 - a - 2.5 * DX);
+      if (tube) maxR = Math.min(maxR, Math.max(0, R - a - 0.01));
+      const x = 0.5 + ur * maxR * Math.cos(uth), z = 0.5 + ur * maxR * Math.sin(uth);
+      // coins that would overlap in plan are lifted above the ones below them
+      let y = GY + o.height;
+      const lift = 0.05 + 2 * dmax / 2 * Math.sin(o.tilt * Math.PI / 180);
+      for (let pass = 0; pass < 2; pass++) for (const b of coins)
+        if (Math.hypot(b.c[0] - x, b.c[2] - z) < b.a + a + 0.01 && Math.abs(b.c[1] - y) < lift) y = b.c[1] + lift;
+      cn.c = [x, y, z];
+      const t = o.tilt * Math.PI / 180 * (0.4 + 0.6 * rand()), ax = rand() * Math.PI * 2;
+      const ux = Math.cos(ax), uz = Math.sin(ax), st = Math.sin(t / 2);
+      cn.q = [ux * st, 0, uz * st, Math.cos(t / 2)];
+      quatToMat(cn.q, cn.Rm);
+      coins.push(cn); order.push(i);
+    }
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    order.forEach((ci, k) => { coins[ci].release = k * o.interval; });
+    dropTime = -1; contacted = false;
+  }
+
+  const w = [0, 0, 0], tmp = [0, 0, 0], n3 = [0, 0, 0], loc = [0, 0, 0], rv = [0, 0, 0];
+  function coupleCoin(cn) {
+    const m = cn.Rm, c = cn.c, v = cn.v;
+    omega(cn, w);
+    const ext = cn.a + 2 * DX, band = DX * 0.75;
+    const i0 = Math.max(0, Math.floor((c[0] - ext) * INV)), i1 = Math.min(N - 1, Math.ceil((c[0] + ext) * INV));
+    const j0 = Math.max(0, Math.floor((c[1] - ext) * INV)), j1 = Math.min(NY - 1, Math.ceil((c[1] + ext) * INV));
+    const k0 = Math.max(0, Math.floor((c[2] - ext) * INV)), k1 = Math.min(N - 1, Math.ceil((c[2] + ext) * INV));
+    let Jx = 0, Jy = 0, Jz = 0, Tx = 0, Ty = 0, Tz = 0;
+    if (j0 > j1) return;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) for (let k = k0; k <= k1; k++) {
+      const id = (i * NY + j) * N + k, mass = gm[id];
+      if (mass <= 0) continue;
+      const rx = i * DX - c[0], ry = j * DX - c[1], rz = k * DX - c[2];
+      const lx = m[0] * rx + m[3] * ry + m[6] * rz, ly = m[1] * rx + m[4] * ry + m[7] * rz, lz = m[2] * rx + m[5] * ry + m[8] * rz;
+      if (discSdf(cn, lx, ly, lz) > band) continue;
+      discNormalWorld(cn, lx, ly, lz, n3);
+      const nx = n3[0], ny = n3[1], nz = n3[2];
+      const ux = v[0] + w[1] * rz - w[2] * ry, uy = v[1] + w[2] * rx - w[0] * rz, uz = v[2] + w[0] * ry - w[1] * rx;
+      const vn = (gx[id] - ux) * nx + (gy[id] - uy) * ny + (gz[id] - uz) * nz;
+      if (vn >= 0) continue;
+      const dvx = -vn * nx, dvy = -vn * ny, dvz = -vn * nz;
+      gx[id] += dvx; gy[id] += dvy; gz[id] += dvz;
+      const ix = -mass * dvx, iy = -mass * dvy, iz = -mass * dvz;
+      Jx += ix; Jy += iy; Jz += iz;
+      Tx += ry * iz - rz * iy; Ty += rz * ix - rx * iz; Tz += rx * iy - ry * ix;
+    }
+    v[0] += Jx / cn.M; v[1] += Jy / cn.M; v[2] += Jz / cn.M;
+    cn.L[0] += Tx; cn.L[1] += Ty; cn.L[2] += Tz;
+  }
+  function kTerm(cn, r, n, out) { // (Iinv (r x n)) x r
+    rv[0] = r[1] * n[2] - r[2] * n[1]; rv[1] = r[2] * n[0] - r[0] * n[2]; rv[2] = r[0] * n[1] - r[1] * n[0];
+    Iinv(cn, rv, tmp);
+    out[0] = tmp[1] * r[2] - tmp[2] * r[1]; out[1] = tmp[2] * r[0] - tmp[0] * r[2]; out[2] = tmp[0] * r[1] - tmp[1] * r[0];
+  }
+  function pointVel(cn, r, out) { omega(cn, w); out[0] = cn.v[0] + w[1] * r[2] - w[2] * r[1]; out[1] = cn.v[1] + w[2] * r[0] - w[0] * r[2]; out[2] = cn.v[2] + w[0] * r[1] - w[1] * r[0]; }
+  function applyImp(cn, r, J, sgn) {
+    cn.v[0] += sgn * J[0] / cn.M; cn.v[1] += sgn * J[1] / cn.M; cn.v[2] += sgn * J[2] / cn.M;
+    cn.L[0] += sgn * (r[1] * J[2] - r[2] * J[1]); cn.L[1] += sgn * (r[2] * J[0] - r[0] * J[2]); cn.L[2] += sgn * (r[0] * J[1] - r[1] * J[0]);
+  }
+  const rA = [0, 0, 0], rB = [0, 0, 0], vA = [0, 0, 0], vB = [0, 0, 0], kA = [0, 0, 0], kB = [0, 0, 0], Jv = [0, 0, 0];
+  function envContacts(cn) {
+    const c = cn.c;
+    for (const s of samples) {
+      sampleWorld(cn, s, rA);
+      const x = c[0] + rA[0], y = c[1] + rA[1], z = c[2] + rA[2], d = envSdf(x, y, z);
+      if (d >= 0) continue;
+      envNormal(x, y, z, n3);
+      c[0] -= n3[0] * d * 0.5; c[1] -= n3[1] * d * 0.5; c[2] -= n3[2] * d * 0.5;
+      pointVel(cn, rA, vA);
+      const vn = vA[0] * n3[0] + vA[1] * n3[1] + vA[2] * n3[2];
+      if (vn >= 0) continue;
+      kTerm(cn, rA, n3, kA);
+      const denom = 1 / cn.M + kA[0] * n3[0] + kA[1] * n3[1] + kA[2] * n3[2];
+      const jn = -1.2 * vn / denom;
+      Jv[0] = jn * n3[0]; Jv[1] = jn * n3[1]; Jv[2] = jn * n3[2];
+      const tx = vA[0] - vn * n3[0], ty = vA[1] - vn * n3[1], tz = vA[2] - vn * n3[2], tl = Math.hypot(tx, ty, tz);
+      if (tl > 1e-6) { const jt = Math.min(tl / denom, 0.5 * jn); Jv[0] -= jt * tx / tl; Jv[1] -= jt * ty / tl; Jv[2] -= jt * tz / tl; }
+      applyImp(cn, rA, Jv, 1);
+    }
+  }
+  function coinContacts(A, B) {
+    const dc = Math.hypot(A.c[0] - B.c[0], A.c[1] - B.c[1], A.c[2] - B.c[2]);
+    if (dc > A.a + B.a + A.h + B.h) return;
+    for (const s of samples) {
+      sampleWorld(A, s, rA);
+      const x = A.c[0] + rA[0], y = A.c[1] + rA[1], z = A.c[2] + rA[2];
+      toLocal(B, x, y, z, loc);
+      const d = discSdf(B, loc[0], loc[1], loc[2]);
+      if (d >= 0) continue;
+      discNormalWorld(B, loc[0], loc[1], loc[2], n3); // points out of B, toward A
+      rB[0] = x - B.c[0]; rB[1] = y - B.c[1]; rB[2] = z - B.c[2];
+      const f = -d * 0.5;
+      for (let i = 0; i < 3; i++) { A.c[i] += n3[i] * f; B.c[i] -= n3[i] * f; }
+      pointVel(A, rA, vA); pointVel(B, rB, vB);
+      const vn = (vA[0] - vB[0]) * n3[0] + (vA[1] - vB[1]) * n3[1] + (vA[2] - vB[2]) * n3[2];
+      if (vn >= 0) continue;
+      kTerm(A, rA, n3, kA); kTerm(B, rB, n3, kB);
+      const denom = 1 / A.M + 1 / B.M + (kA[0] + kB[0]) * n3[0] + (kA[1] + kB[1]) * n3[1] + (kA[2] + kB[2]) * n3[2];
+      const jn = -1.2 * vn / denom;
+      Jv[0] = jn * n3[0]; Jv[1] = jn * n3[1]; Jv[2] = jn * n3[2];
+      applyImp(A, rA, Jv, 1); applyImp(B, rB, Jv, -1);
+    }
+  }
+  function integrateCoin(cn) {
+    const c = cn.c, v = cn.v;
+    c[0] += v[0] * DT; c[1] += v[1] * DT; c[2] += v[2] * DT;
+    const lim = cn.a + 2 * DX;
+    for (const ax of [0, 2]) { if (c[ax] < lim) { c[ax] = lim; v[ax] = Math.max(v[ax], 0); } if (c[ax] > 1 - lim) { c[ax] = 1 - lim; v[ax] = Math.min(v[ax], 0); } }
+    omega(cn, w);
+    const q = cn.q;
+    const qx = 0.5 * DT * (w[0] * q[3] + w[1] * q[2] - w[2] * q[1]);
+    const qy = 0.5 * DT * (-w[0] * q[2] + w[1] * q[3] + w[2] * q[0]);
+    const qz = 0.5 * DT * (w[0] * q[1] - w[1] * q[0] + w[2] * q[3]);
+    const qw = 0.5 * DT * (-w[0] * q[0] - w[1] * q[1] - w[2] * q[2]);
+    q[0] += qx; q[1] += qy; q[2] += qz; q[3] += qw;
+    const ql = Math.hypot(q[0], q[1], q[2], q[3]); q[0] /= ql; q[1] /= ql; q[2] /= ql; q[3] /= ql;
+    quatToMat(q, cn.Rm);
+    if (stepCount % 6 === 0) cn.trail.push([c[0], c[1], c[2]]);
+  }
+
+  function releaseCheck() {
+    if (dropTime >= 0) for (const cn of coins) if (!cn.dropped && time - dropTime >= cn.release) cn.dropped = true;
+    return coins.filter(cn => cn.dropped);
+  }
+  function releaseDue(sec) { if (dropTime >= 0) for (const cn of coins) if (!cn.dropped && sec >= cn.release) cn.dropped = true; }
+  // extra ballistic steps for a coin that is still high in the air
+  function airStep(cn, n) { for (let i = 0; i < n; i++) { cn.v[1] -= G * DT; integrateCoin(cn); } }
+  function coinPhase(live) {
+    for (const cn of live) envContacts(cn);
+    for (let i = 0; i < live.length; i++) for (let j = 0; j < live.length; j++) if (i !== j) coinContacts(live[i], live[j]);
+    for (const cn of live) integrateCoin(cn);
+    time += DT; stepCount++;
+  }
+  // used by the GPU path: fluid impulses (world, per coin) measured on the GPU, spread over K substeps
+  function coinSubstep(imp, K) {
+    const live = releaseCheck();
+    for (const cn of live) {
+      const i = coins.indexOf(cn), J = imp[i];
+      cn.v[1] -= G * DT;
+      if (J) { cn.v[0] += J[0] / K / cn.M; cn.v[1] += J[1] / K / cn.M; cn.v[2] += J[2] / K / cn.M; cn.L[0] += J[3] / K; cn.L[1] += J[4] / K; cn.L[2] += J[5] / K; }
+    }
+    coinPhase(live);
+  }
+  // Before the first coin reaches the ground or water, nothing else moves: advance coins alone at full speed.
+  function freeFall(n) {
+    if (dropTime < 0 || contacted) return false;
+    for (let i = 0; i < n; i++) {
+      const live = releaseCheck();
+      if (live.some(cn => cn.c[1] - cn.a - cn.h < GY + 0.06)) { contacted = true; return i > 0; }
+      coinSubstep([], 1);
+    }
+    return true;
+  }
+  function step() {
+    const live = releaseCheck();
+    gm.fill(0); gx.fill(0); gy.fill(0); gz.fill(0);
+    const D = 4 * INV * INV;
+    const WX = new Float64Array(3), WY = new Float64Array(3), WZ = new Float64Array(3);
+    for (let p = 0; p < P; p++) {
+      const X = px[p] * INV, Y = py[p] * INV, Z = pz[p] * INV;
+      const bx = Math.floor(X - 0.5), by = Math.floor(Y - 0.5), bz = Math.floor(Z - 0.5);
+      const fx = X - bx, fy = Y - by, fz = Z - bz;
+      WX[0] = 0.5 * (1.5 - fx) ** 2; WX[1] = 0.75 - (fx - 1) ** 2; WX[2] = 0.5 * (fx - 0.5) ** 2;
+      WY[0] = 0.5 * (1.5 - fy) ** 2; WY[1] = 0.75 - (fy - 1) ** 2; WY[2] = 0.5 * (fy - 0.5) ** 2;
+      WZ[0] = 0.5 * (1.5 - fz) ** 2; WZ[1] = 0.75 - (fz - 1) ** 2; WZ[2] = 0.5 * (fz - 0.5) ** 2;
+      const stress = -DT * D * E * PVOL * (Jp[p] - 1);
+      const o = p * 9;
+      const a00 = stress + PMASS * C[o], a01 = PMASS * C[o + 1], a02 = PMASS * C[o + 2];
+      const a10 = PMASS * C[o + 3], a11 = stress + PMASS * C[o + 4], a12 = PMASS * C[o + 5];
+      const a20 = PMASS * C[o + 6], a21 = PMASS * C[o + 7], a22 = stress + PMASS * C[o + 8];
+      const mvx = PMASS * vx[p], mvy = PMASS * vy[p], mvz = PMASS * vz[p];
+      for (let a = 0; a < 3; a++) {
+        const dxp = (a - fx) * DX, wa = WX[a], ia = (bx + a) * NY;
+        for (let b = 0; b < 3; b++) {
+          const dyp = (b - fy) * DX, wab = wa * WY[b], ib = (ia + by + b) * N + bz;
+          for (let c = 0; c < 3; c++) {
+            const dzp = (c - fz) * DX, wt = wab * WZ[c], id = ib + c;
+            gx[id] += wt * (mvx + a00 * dxp + a01 * dyp + a02 * dzp);
+            gy[id] += wt * (mvy + a10 * dxp + a11 * dyp + a12 * dzp);
+            gz[id] += wt * (mvz + a20 * dxp + a21 * dyp + a22 * dzp);
+            gm[id] += wt * PMASS;
+          }
+        }
+      }
+    }
+    for (let id = 0; id < NN; id++) {
+      const m = gm[id];
+      if (m <= 0) continue;
+      gx[id] /= m; gy[id] /= m; gz[id] /= m;
+      gy[id] -= DT * G;
+    }
+    for (const cn of live) { cn.v[1] -= G * DT; coupleCoin(cn); }
+    for (let i = 0; i < N; i++) for (let j = 0; j < NY; j++) for (let k = 0; k < N; k++) {
+      const id = (i * NY + j) * N + k;
+      if (gm[id] <= 0) continue;
+      if ((i < 2 && gx[id] < 0) || (i > N - 3 && gx[id] > 0)) gx[id] = 0;
+      if ((j < 2 && gy[id] < 0) || (j > NY - 3 && gy[id] > 0)) gy[id] = 0;
+      if ((k < 2 && gz[id] < 0) || (k > N - 3 && gz[id] > 0)) gz[id] = 0;
+      const f = nodeFlag[id];
+      if (f) {
+        if (f === 2) { gx[id] = gy[id] = gz[id] = 0; continue; }
+        const nx = nodeN[id * 3], ny = nodeN[id * 3 + 1], nz = nodeN[id * 3 + 2];
+        const vn = gx[id] * nx + gy[id] * ny + gz[id] * nz;
+        if (vn < 0) { gx[id] -= vn * nx; gy[id] -= vn * ny; gz[id] -= vn * nz; }
+      }
+    }
+    const lo = 2 * DX, hi = 1 - 2 * DX, hiY = HY - 2 * DX;
+    for (let p = 0; p < P; p++) {
+      const X = px[p] * INV, Y = py[p] * INV, Z = pz[p] * INV;
+      const bx = Math.floor(X - 0.5), by = Math.floor(Y - 0.5), bz = Math.floor(Z - 0.5);
+      const fx = X - bx, fy = Y - by, fz = Z - bz;
+      WX[0] = 0.5 * (1.5 - fx) ** 2; WX[1] = 0.75 - (fx - 1) ** 2; WX[2] = 0.5 * (fx - 0.5) ** 2;
+      WY[0] = 0.5 * (1.5 - fy) ** 2; WY[1] = 0.75 - (fy - 1) ** 2; WY[2] = 0.5 * (fy - 0.5) ** 2;
+      WZ[0] = 0.5 * (1.5 - fz) ** 2; WZ[1] = 0.75 - (fz - 1) ** 2; WZ[2] = 0.5 * (fz - 0.5) ** 2;
+      let nvx = 0, nvy = 0, nvz = 0, c0 = 0, c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0, c6 = 0, c7 = 0, c8 = 0;
+      for (let a = 0; a < 3; a++) {
+        const dxp = (a - fx) * DX, wa = WX[a], ia = (bx + a) * NY;
+        for (let b = 0; b < 3; b++) {
+          const dyp = (b - fy) * DX, wab = wa * WY[b], ib = (ia + by + b) * N + bz;
+          for (let c = 0; c < 3; c++) {
+            const dzp = (c - fz) * DX, wt = wab * WZ[c], id = ib + c;
+            const ux = gx[id] * wt, uy = gy[id] * wt, uz = gz[id] * wt;
+            nvx += ux; nvy += uy; nvz += uz;
+            c0 += ux * dxp; c1 += ux * dyp; c2 += ux * dzp;
+            c3 += uy * dxp; c4 += uy * dyp; c5 += uy * dzp;
+            c6 += uz * dxp; c7 += uz * dyp; c8 += uz * dzp;
+          }
+        }
+      }
+      const o = p * 9;
+      C[o] = D * c0; C[o + 1] = D * c1; C[o + 2] = D * c2; C[o + 3] = D * c3; C[o + 4] = D * c4;
+      C[o + 5] = D * c5; C[o + 6] = D * c6; C[o + 7] = D * c7; C[o + 8] = D * c8;
+      const J = Jp[p] * (1 + DT * (C[o] + C[o + 4] + C[o + 8]));
+      Jp[p] = J < 0.6 ? 0.6 : J > 1.05 ? 1.05 : J;
+      vx[p] = nvx; vy[p] = nvy; vz[p] = nvz; spd[p] = Math.hypot(nvx, nvy, nvz);
+      let x = px[p] + DT * nvx, y = py[p] + DT * nvy, z = pz[p] + DT * nvz;
+      const d = envSdf(x, y, z);
+      if (d < 0) {
+        envNormal(x, y, z, tmpN);
+        x -= tmpN[0] * d; y -= tmpN[1] * d; z -= tmpN[2] * d;
+        const vn = vx[p] * tmpN[0] + vy[p] * tmpN[1] + vz[p] * tmpN[2];
+        if (vn < 0) { vx[p] -= vn * tmpN[0] + 0.3 * vx[p]; vy[p] -= vn * tmpN[1]; vz[p] -= vn * tmpN[2] + 0.3 * vz[p]; }
+      }
+      px[p] = x < lo ? lo : x > hi ? hi : x;
+      py[p] = y < lo ? lo : y > hiY ? hiY : y;
+      pz[p] = z < lo ? lo : z > hi ? hi : z;
+    }
+    coinPhase(live);
+  }
+
+  // ---- surface nets on splatted density ----
+  function waterSurface(src) {
+    const px = src ? src.px : pxLive(), py = src ? src.py : pyLive(), pz = src ? src.pz : pzLive(), P = src ? src.P : Pn();
+    const M = 2 * N, MY = 2 * NY, SX = M + 1, SY = MY + 1, h = 1 / M, f = new Float32Array(SX * SY * SX);
+    const at = (i, j, k) => (i * SY + j) * SX + k;
+    for (let p = 0; p < P; p++) {
+      const X = px[p] * M, Y = py[p] * M, Z = pz[p] * M;
+      const i = Math.floor(X), j = Math.floor(Y), k = Math.floor(Z), u = X - i, v = Y - j, t = Z - k;
+      for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) for (let c = 0; c < 2; c++) {
+        const ii = i + a, jj = j + b, kk = k + c;
+        if (ii < 0 || jj < 0 || kk < 0 || ii >= SX || jj >= SY || kk >= SX) continue;
+        f[at(ii, jj, kk)] += (a ? u : 1 - u) * (b ? v : 1 - v) * (c ? t : 1 - t);
+      }
+    }
+    const g = new Float32Array(f.length), dims = [SX, SY, SX], strides = [SY * SX, SX, 1];
+    for (let axis = 0; axis < 3; axis++) {
+      const st = strides[axis], lim = dims[axis];
+      for (let i = 0; i < SX; i++) for (let j = 0; j < SY; j++) for (let k = 0; k < SX; k++) {
+        const id = at(i, j, k), q = axis === 0 ? i : axis === 1 ? j : k;
+        g[id] = 0.25 * (q > 0 ? f[id - st] : 0) + 0.5 * f[id] + 0.25 * (q < lim - 1 ? f[id + st] : 0);
+      }
+      f.set(g);
+    }
+    for (let i = 0; i < f.length; i++) f[i] -= 0.35;
+    const CD = [M, MY, M];
+    const verts = [], vid = new Int32Array(M * MY * M).fill(-1), cellAt = (i, j, k) => (i * MY + j) * M + k;
+    const corners = []; for (let c = 0; c < 8; c++) corners.push([c & 1, (c >> 1) & 1, (c >> 2) & 1]);
+    const edges = []; for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) { const d = a ^ b; if (d === 1 || d === 2 || d === 4) edges.push([a, b]); }
+    const val = new Float32Array(8);
+    for (let i = 0; i < M; i++) for (let j = 0; j < MY; j++) for (let k = 0; k < M; k++) {
+      let pos = 0;
+      for (let c = 0; c < 8; c++) { const cc = corners[c]; val[c] = f[at(i + cc[0], j + cc[1], k + cc[2])]; if (val[c] > 0) pos++; }
+      if (!pos || pos === 8) continue;
+      let sx = 0, sy = 0, sz = 0, n = 0;
+      for (const [a, b] of edges) {
+        if ((val[a] > 0) === (val[b] > 0)) continue;
+        const t = val[a] / (val[a] - val[b]), A = corners[a], B = corners[b];
+        sx += A[0] + t * (B[0] - A[0]); sy += A[1] + t * (B[1] - A[1]); sz += A[2] + t * (B[2] - A[2]); n++;
+      }
+      vid[cellAt(i, j, k)] = verts.length / 3;
+      verts.push((i + sx / n) * h, (j + sy / n) * h, (k + sz / n) * h);
+    }
+    const faces = [];
+    for (let i = 0; i < M; i++) for (let j = 0; j < MY; j++) for (let k = 0; k < M; k++) {
+      const node = [i, j, k], s0 = f[at(i, j, k)] > 0;
+      for (let d = 0; d < 3; d++) {
+        const u = (d + 1) % 3, v = (d + 2) % 3;
+        if (node[u] < 1 || node[v] < 1 || node[u] >= CD[u] || node[v] >= CD[v]) continue;
+        const nb = node.slice(); nb[d]++;
+        if ((f[at(nb[0], nb[1], nb[2])] > 0) === s0) continue;
+        const c1 = node.slice(), c2 = node.slice(), c3 = node.slice();
+        c1[u]--; c2[u]--; c2[v]--; c3[v]--;
+        const q = [node, c1, c2, c3].map(cc => vid[cellAt(cc[0], cc[1], cc[2])]);
+        if (q.some(x => x < 0)) continue;
+        faces.push(s0 ? q : q.slice().reverse());
+      }
+    }
+    return { verts, faces };
+  }
+  function pxLive() { return px; } function pyLive() { return py; } function pzLive() { return pz; } function Pn() { return P; }
+  buildNodes(); resetWater();
+  return {
+    N, NY, HY, DX, DT, GY, PB, R, WL, E, G, PMASS, terrainY, omega, coinSubstep, freeFall, releaseDue, airStep,
+    get spd() { return spd; }, get Jp() { return Jp; },
+    get coins() { return coins; },
+    get P() { return P; }, get px() { return px; }, get py() { return py; }, get pz() { return pz; },
+    get vx() { return vx; }, get vy() { return vy; }, get vz() { return vz; },
+    get time() { return time; }, get tube() { return tube; }, get dropped() { return dropTime >= 0; },
+    step, setCoins, resetWater, waterSurface,
+    setTube(t) { tube = t; buildNodes(); },
+    drop() { dropTime = time; }
+  };
+}
+const SHADER = `struct Params {
+  n: u32, nn: u32, numP: u32, numCoins: u32,
+  dt: f32, dx: f32, inv: f32, E: f32,
+  g: f32, R: f32, PB: f32, GY: f32,
+  tube: f32, fs: f32, isc: f32, hy: f32,
+  sigma: f32, noise: f32, seed: u32, fingers: f32,
+  medium: u32, visc: f32, fric: f32, yieldv: f32,
+};
+struct Particle {
+  pos: vec3f, J: f32,
+  vel: vec3f, p0: f32,
+  c0: vec3f, p1: f32,
+  c1: vec3f, p2: f32,
+  c2: vec3f, p3: f32,
+};
+struct Coin {
+  c: vec3f, a: f32,
+  v: vec3f, h: f32,
+  w: vec3f, live: f32,
+  r0: vec3f, q0: f32,
+  r1: vec3f, q1: f32,
+  r2: vec3f, q2: f32,
+};
+@group(0) @binding(0) var<uniform> prm: Params;
+@group(0) @binding(1) var<storage, read_write> parts: array<Particle>;
+@group(0) @binding(2) var<storage, read_write> grid: array<atomic<i32>>;
+@group(0) @binding(3) var<storage, read_write> gv: array<vec4f>;
+@group(0) @binding(4) var<storage, read> coins: array<Coin>;
+@group(0) @binding(5) var<storage, read_write> imp: array<atomic<i32>>;
+@group(0) @binding(6) var<storage, read_write> outp: array<vec4f>;
+@group(0) @binding(7) var<storage, read_write> nb: array<vec4f>;
+
+fn dune(x: f32, z: f32) -> f32 {
+  let t = x * 1.8 + 0.22 * sin(z * 4.0) + 0.35 * z;
+  return 0.028 * pow(abs(sin(3.14159265 * t)), 1.6) + 0.007 * sin(5.3 * z + 2.0 * x) + 0.004 * sin(11.0 * x - 7.0 * z) + 0.01;
+}
+fn terrainY(x: f32, z: f32) -> f32 {
+  let r = length(vec2f(x - 0.5, z - 0.5));
+  let k = smoothstep(0.0, 1.0, (r - prm.R - 0.015) / 0.12);
+  return prm.GY + k * dune(x, z);
+}
+fn envSdf(p: vec3f) -> f32 {
+  let r = length(vec2f(p.x - 0.5, p.z - 0.5));
+  let col = min(prm.R - r, p.y - prm.PB);
+  if (prm.tube > 0.5) { return col; }
+  return max(col, (p.y - terrainY(p.x, p.z)) * 0.9);
+}
+fn envNormal(p: vec3f) -> vec3f {
+  let e = 0.001;
+  let n = vec3f(
+    envSdf(p + vec3f(e, 0.0, 0.0)) - envSdf(p - vec3f(e, 0.0, 0.0)),
+    envSdf(p + vec3f(0.0, e, 0.0)) - envSdf(p - vec3f(0.0, e, 0.0)),
+    envSdf(p + vec3f(0.0, 0.0, e)) - envSdf(p - vec3f(0.0, 0.0, e)));
+  let l = length(n);
+  if (l < 1e-9) { return vec3f(0.0, 1.0, 0.0); }
+  return n / l;
+}
+fn discSdf(l: vec3f, a: f32, h: f32) -> f32 {
+  let d = vec2f(length(l.xz) - a, abs(l.y) - h * 0.5);
+  return length(max(d, vec2f(0.0))) + min(max(d.x, d.y), 0.0);
+}
+fn nyv() -> u32 { return u32(round(prm.hy * f32(prm.n))); }
+fn colorAt(i: i32, j: i32, k: i32) -> f32 {
+  let n = i32(prm.n); let ny = i32(nyv());
+  if (i < 0 || j < 0 || k < 0 || i >= n || j >= ny || k >= n) { return 0.0; }
+  let idx = u32((i * ny + j) * n + k);
+  return min(f32(atomicLoad(&grid[idx * 4u + 3u])) / prm.fs / 4.0, 1.0);
+}
+fn nhat(i: i32, j: i32, k: i32) -> vec3f {
+  let n = i32(prm.n); let ny = i32(nyv());
+  if (i < 0 || j < 0 || k < 0 || i >= n || j >= ny || k >= n) { return vec3f(0.0); }
+  let g = nb[u32((i * ny + j) * n + k)];
+  if (g.w < 1e-4) { return vec3f(0.0); }
+  return g.xyz / g.w;
+}
+fn hash(x: u32) -> f32 {
+  var h = x * 747796405u + 2891336453u;
+  h = ((h >> ((h >> 28u) + 4u)) ^ h) * 277803737u;
+  h = (h >> 22u) ^ h;
+  return f32(h) / 4294967295.0;
+}
+fn weights(f: f32) -> vec3f {
+  return vec3f(0.5 * (1.5 - f) * (1.5 - f), 0.75 - (f - 1.0) * (f - 1.0), 0.5 * (f - 0.5) * (f - 0.5));
+}
+
+@compute @workgroup_size(64)
+fn p2g(@builtin(global_invocation_id) gid: vec3u) {
+  let p = gid.x;
+  if (p >= prm.numP) { return; }
+  let P = parts[p];
+  let X = P.pos * prm.inv;
+  let base = floor(X - vec3f(0.5));
+  let fx = X - base;
+  let wx = weights(fx.x); let wy = weights(fx.y); let wz = weights(fx.z);
+  let D = 4.0 * prm.inv * prm.inv;
+  // medium: 0 water, 1 viscous fluid, 2 dry sand, 3 clay
+  var jj = P.J - 1.0;
+  if (prm.medium >= 2u) { jj = min(jj, 0.0); }
+  let stress = -prm.dt * D * prm.E * jj;
+  let s0 = vec3f(P.c0.x, 0.5 * (P.c0.y + P.c1.x), 0.5 * (P.c0.z + P.c2.x));
+  let s1 = vec3f(s0.y, P.c1.y, 0.5 * (P.c1.z + P.c2.y));
+  let s2 = vec3f(s0.z, s1.z, P.c2.z);
+  let dn = sqrt(dot(s0, s0) + dot(s1, s1) + dot(s2, s2));
+  let press = max(0.0, -prm.E * jj);
+  let etaMax = 0.2 / (prm.dt * D);
+  var eta = 0.0;
+  if (prm.medium == 1u) { eta = prm.visc; }
+  else if (prm.medium == 2u) { eta = min(prm.fric * press / (dn + 1e-3), 0.2 * prm.fric * etaMax); }
+  else if (prm.medium == 3u) { eta = min(prm.visc + (0.2 + 0.3 * prm.fric * press) / (dn + 1e-3), prm.yieldv * etaMax); }
+  eta = min(eta, etaMax);
+  let vs = -prm.dt * D * 2.0 * eta;
+  let a0 = P.c0 + vec3f(stress, 0.0, 0.0) + vs * s0;
+  let a1 = P.c1 + vec3f(0.0, stress, 0.0) + vs * s1;
+  let a2 = P.c2 + vec3f(0.0, 0.0, stress) + vs * s2;
+  let b = vec3u(base);
+  for (var i = 0u; i < 3u; i++) {
+    for (var j = 0u; j < 3u; j++) {
+      for (var k = 0u; k < 3u; k++) {
+        let off = vec3f(f32(i), f32(j), f32(k));
+        let dpos = (off - fx) * prm.dx;
+        let wt = wx[i] * wy[j] * wz[k];
+        let mom = wt * (P.vel + vec3f(dot(a0, dpos), dot(a1, dpos), dot(a2, dpos)));
+        let idx = ((b.x + i) * nyv() + (b.y + j)) * prm.n + (b.z + k);
+        atomicAdd(&grid[idx * 4u], i32(round(mom.x * prm.fs)));
+        atomicAdd(&grid[idx * 4u + 1u], i32(round(mom.y * prm.fs)));
+        atomicAdd(&grid[idx * 4u + 2u], i32(round(mom.z * prm.fs)));
+        atomicAdd(&grid[idx * 4u + 3u], i32(round(wt * prm.fs)));
+      }
+    }
+  }
+}
+
+@compute @workgroup_size(64)
+fn gridNormal(@builtin(global_invocation_id) gid: vec3u) {
+  let idx = gid.x;
+  if (idx >= prm.nn) { return; }
+  if (prm.sigma <= 0.0) { return; }
+  let n = prm.n; let ny = nyv();
+  let i = i32(idx / (ny * n)); let j = i32((idx / n) % ny); let k = i32(idx % n);
+  let g = vec3f(colorAt(i + 1, j, k) - colorAt(i - 1, j, k), colorAt(i, j + 1, k) - colorAt(i, j - 1, k), colorAt(i, j, k + 1) - colorAt(i, j, k - 1)) * (0.5 * prm.inv);
+  nb[idx] = vec4f(g, length(g));
+}
+
+@compute @workgroup_size(64)
+fn gridUpdate(@builtin(global_invocation_id) gid: vec3u) {
+  let idx = gid.x;
+  if (idx >= prm.nn) { return; }
+  let mi = atomicLoad(&grid[idx * 4u + 3u]);
+  if (mi <= 0) { gv[idx] = vec4f(0.0); return; }
+  let m = f32(mi) / prm.fs;
+  var v = vec3f(f32(atomicLoad(&grid[idx * 4u])), f32(atomicLoad(&grid[idx * 4u + 1u])), f32(atomicLoad(&grid[idx * 4u + 2u]))) / prm.fs / m;
+  v.y -= prm.dt * prm.g;
+  let n = prm.n;
+  let ny = nyv();
+  let ii = idx / (ny * n); let jj = (idx / n) % ny; let kk = idx % n;
+  if (prm.sigma > 0.0) {
+    let gi = nb[idx];
+    if (gi.w > 0.5 * prm.inv * 0.15) {
+      let i = i32(ii); let j = i32(jj); let k = i32(kk);
+      let kappa = -((nhat(i + 1, j, k).x - nhat(i - 1, j, k).x) + (nhat(i, j + 1, k).y - nhat(i, j - 1, k).y) + (nhat(i, j, k + 1).z - nhat(i, j, k - 1).z)) * (0.5 * prm.inv);
+      let c = max(min(m / 4.0, 1.0), 0.25);
+      let s = prm.sigma;
+      var a = s * clamp(kappa, -3.0 * prm.inv, 3.0 * prm.inv) * gi.xyz / c;
+      let al = length(a);
+      let amax = 400.0;
+      if (al > amax) { a = a * (amax / al); }
+      v += prm.dt * a;
+    }
+  }
+  let x = vec3f(f32(ii), f32(jj), f32(kk)) * prm.dx;
+  // crown fingers: amplify an azimuthal ripple in fluid thrown upward around each impact
+  if (prm.noise > 0.0 && prm.fingers > 0.5 && v.y > 0.2 && m < 3.2 && x.y > prm.GY - 0.5 * (prm.GY - prm.PB) && x.y < prm.GY + 0.08) {
+    var best = 1e9; var th = 0.0; var ph = 0.0;
+    for (var ci = 0u; ci < prm.numCoins; ci++) {
+      let cn = coins[ci];
+      if (cn.live < 0.5) { continue; }
+      let dxz = x.xz - cn.c.xz; let d2 = dot(dxz, dxz);
+      if (d2 < best) { best = d2; th = atan2(dxz.y, dxz.x); ph = hash(prm.seed * 31u + ci) * 6.2831853; }
+    }
+    if (best < 1e8) {
+      let wob = 0.35 * sin(3.0 * th + ph * 1.7) * hash(prm.seed + 7u);
+      let sw = sin(prm.fingers * th + ph + wob);
+      v += prm.dt * 140.0 * prm.noise * sw * (1.0 - clamp(v.y / 3.5, 0.0, 1.0)) * vec3f(0.3 * v.x, v.y, 0.3 * v.z);
+    }
+  }
+  let band = prm.dx * 0.75;
+  let e = prm.dx * 0.2;
+  for (var ci = 0u; ci < prm.numCoins; ci++) {
+    let cn = coins[ci];
+    if (cn.live < 0.5) { continue; }
+    let r = x - cn.c;
+    if (length(r) > cn.a + cn.h + 2.0 * prm.dx) { continue; }
+    let l = r.x * cn.r0 + r.y * cn.r1 + r.z * cn.r2;
+    if (discSdf(l, cn.a, cn.h) > band) { continue; }
+    var nl = vec3f(
+      discSdf(l + vec3f(e, 0.0, 0.0), cn.a, cn.h) - discSdf(l - vec3f(e, 0.0, 0.0), cn.a, cn.h),
+      discSdf(l + vec3f(0.0, e, 0.0), cn.a, cn.h) - discSdf(l - vec3f(0.0, e, 0.0), cn.a, cn.h),
+      discSdf(l + vec3f(0.0, 0.0, e), cn.a, cn.h) - discSdf(l - vec3f(0.0, 0.0, e), cn.a, cn.h));
+    let nll = length(nl);
+    if (nll < 1e-9) { continue; }
+    nl = nl / nll;
+    let nw = vec3f(dot(cn.r0, nl), dot(cn.r1, nl), dot(cn.r2, nl));
+    let u = cn.v + cross(cn.w, r);
+    let vn = dot(v - u, nw);
+    if (vn >= 0.0) { continue; }
+    let dv = -vn * nw;
+    v += dv;
+    let J = -m * dv;
+    let T = cross(r, J);
+    atomicAdd(&imp[ci * 6u], i32(round(J.x * prm.isc)));
+    atomicAdd(&imp[ci * 6u + 1u], i32(round(J.y * prm.isc)));
+    atomicAdd(&imp[ci * 6u + 2u], i32(round(J.z * prm.isc)));
+    atomicAdd(&imp[ci * 6u + 3u], i32(round(T.x * prm.isc)));
+    atomicAdd(&imp[ci * 6u + 4u], i32(round(T.y * prm.isc)));
+    atomicAdd(&imp[ci * 6u + 5u], i32(round(T.z * prm.isc)));
+  }
+  if ((ii < 2u && v.x < 0.0) || (ii > n - 3u && v.x > 0.0)) { v.x = 0.0; }
+  if ((jj < 2u && v.y < 0.0) || (jj > ny - 3u && v.y > 0.0)) { v.y = 0.0; }
+  if ((kk < 2u && v.z < 0.0) || (kk > n - 3u && v.z > 0.0)) { v.z = 0.0; }
+  let d = envSdf(x);
+  if (d < prm.dx * 0.5) {
+    if (d < -1.5 * prm.dx) { v = vec3f(0.0); }
+    else {
+      let nn = envNormal(x);
+      let vn = dot(v, nn);
+      if (vn < 0.0) { v -= vn * nn; }
+    }
+  }
+  gv[idx] = vec4f(v, 0.0);
+}
+
+@compute @workgroup_size(64)
+fn g2p(@builtin(global_invocation_id) gid: vec3u) {
+  let p = gid.x;
+  if (p >= prm.numP) { return; }
+  var P = parts[p];
+  let X = P.pos * prm.inv;
+  let base = floor(X - vec3f(0.5));
+  let fx = X - base;
+  let wx = weights(fx.x); let wy = weights(fx.y); let wz = weights(fx.z);
+  let b = vec3u(base);
+  var nv = vec3f(0.0); var c0 = vec3f(0.0); var c1 = vec3f(0.0); var c2 = vec3f(0.0);
+  for (var i = 0u; i < 3u; i++) {
+    for (var j = 0u; j < 3u; j++) {
+      for (var k = 0u; k < 3u; k++) {
+        let dpos = (vec3f(f32(i), f32(j), f32(k)) - fx) * prm.dx;
+        let wt = wx[i] * wy[j] * wz[k];
+        let idx = ((b.x + i) * nyv() + (b.y + j)) * prm.n + (b.z + k);
+        let g = gv[idx].xyz * wt;
+        nv += g;
+        c0 += g.x * dpos; c1 += g.y * dpos; c2 += g.z * dpos;
+      }
+    }
+  }
+  let D = 4.0 * prm.inv * prm.inv;
+  P.c0 = c0 * D; P.c1 = c1 * D; P.c2 = c2 * D;
+  var jmax = 1.05;
+  if (prm.medium == 2u) { jmax = 1.0; } else if (prm.medium == 3u) { jmax = 1.01; }
+  P.J = clamp(P.J * (1.0 + prm.dt * (P.c0.x + P.c1.y + P.c2.z)), 0.6, jmax);
+  var vel = nv;
+  if (prm.medium >= 2u) {
+    // grains and clay come to rest instead of creeping: damp slow, supported material
+    let q0 = vec3f(P.c0.x, 0.5 * (P.c0.y + P.c1.x), 0.5 * (P.c0.z + P.c2.x));
+    let q1 = vec3f(q0.y, P.c1.y, 0.5 * (P.c1.z + P.c2.y));
+    let q2 = vec3f(q0.z, q1.z, P.c2.z);
+    let rate = sqrt(dot(q0, q0) + dot(q1, q1) + dot(q2, q2));
+    let lockRate = select(4.0, 6.0, prm.medium == 3u);
+    if (rate < lockRate && P.J < 0.9995) {
+      let f = rate / lockRate;
+      vel *= 0.85 + 0.15 * f;
+    }
+  }
+  var pos = P.pos + prm.dt * nv;
+  let d = envSdf(pos);
+  if (d < 0.0) {
+    let nn = envNormal(pos);
+    pos -= nn * d;
+    let vn = dot(vel, nn);
+    if (vn < 0.0) { vel -= vn * nn; vel.x -= 0.3 * nv.x; vel.z -= 0.3 * nv.z; }
+  }
+  let lo = 2.0 * prm.dx; let hi = 1.0 - 2.0 * prm.dx;
+  pos = clamp(pos, vec3f(lo), vec3f(hi, prm.hy - lo, hi));
+  P.pos = pos; P.vel = vel;
+  parts[p] = P;
+  outp[p] = vec4f(pos, length(nv));
+}
+`;
+let gpuDevice = null;
+async function getDevice() {
+  if (gpuDevice) return gpuDevice;
+  if (!navigator.gpu) return null;
+  try {
+    const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+    if (!adapter) return null;
+    gpuDevice = await adapter.requestDevice();
+    gpuDevice.lost.then(() => { gpuDevice = null; });
+    return gpuDevice;
+  } catch (e) { return null; }
+}
+// Wraps a CPU sim: the fluid runs on the GPU, coins and contacts stay on the CPU.
+function createGpuSim(dev, N, geo) {
+  const cpu = createSim(N, geo);
+  const U = GPUBufferUsage, NN = N * cpu.NY * N, FS = 1e5, ISC = 1e4, MAXC = 12;
+  let P = 0, partB, outB, outStage, bg;
+  const buf = (size, usage) => dev.createBuffer({ size, usage });
+  const prmB = buf(96, U.UNIFORM | U.COPY_DST);
+  const nbB = buf(NN * 16, U.STORAGE);
+  const gridB = buf(NN * 16, U.STORAGE | U.COPY_DST);
+  const gvB = buf(NN * 16, U.STORAGE);
+  const coinB = buf(MAXC * 96, U.STORAGE | U.COPY_DST);
+  const impB = buf(MAXC * 24, U.STORAGE | U.COPY_SRC | U.COPY_DST);
+  const impStage = buf(MAXC * 24, U.MAP_READ | U.COPY_DST);
+  const mod = dev.createShaderModule({ code: SHADER });
+  const entries = [0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ binding: i, visibility: GPUShaderStage.COMPUTE, buffer: { type: i === 0 ? 'uniform' : i === 4 ? 'read-only-storage' : 'storage' } }));
+  const bgl = dev.createBindGroupLayout({ entries });
+  const layout = dev.createPipelineLayout({ bindGroupLayouts: [bgl] });
+  const pipes = ['p2g', 'gridNormal', 'gridUpdate', 'g2p'].map(e => dev.createComputePipeline({ layout, compute: { module: mod, entryPoint: e } }));
+  let tube = false;
+  const mat = { medium: 0, visc: 0, fric: 0, yieldv: 0 };
+  const tension = { sigma: 0, noise: 0, seed: 1, fingers: 16 };
+  function upload() {
+    P = cpu.P;
+    [partB, outB, outStage].forEach(b => b && b.destroy());
+    partB = buf(P * 80, U.STORAGE | U.COPY_DST);
+    outB = buf(P * 16, U.STORAGE | U.COPY_SRC);
+    outStage = buf(P * 16, U.MAP_READ | U.COPY_DST);
+    const a = new Float32Array(P * 20);
+    for (let p = 0; p < P; p++) { a[p * 20] = cpu.px[p]; a[p * 20 + 1] = cpu.py[p]; a[p * 20 + 2] = cpu.pz[p]; a[p * 20 + 3] = 1; }
+    dev.queue.writeBuffer(partB, 0, a);
+    bg = dev.createBindGroup({ layout: bgl, entries: [prmB, partB, gridB, gvB, coinB, impB, outB, nbB].map((b, i) => ({ binding: i, resource: { buffer: b } })) });
+  }
+  function writeParams() {
+    const ab = new ArrayBuffer(96), u = new Uint32Array(ab), f = new Float32Array(ab);
+    u[0] = N; u[1] = NN; u[2] = P; u[3] = Math.min(MAXC, cpu.coins.length);
+    f[4] = cpu.DT; f[5] = cpu.DX; f[6] = N; f[7] = cpu.E; f[8] = cpu.G; f[9] = cpu.R; f[10] = cpu.PB; f[11] = cpu.GY;
+    f[12] = tube ? 1 : 0; f[13] = FS; f[14] = ISC; f[15] = cpu.HY; f[16] = tension.sigma; f[17] = tension.noise; u[18] = tension.seed >>> 0; f[19] = tension.fingers; u[20] = mat.medium; f[21] = mat.visc; f[22] = mat.fric; f[23] = mat.yieldv;
+    dev.queue.writeBuffer(prmB, 0, ab);
+  }
+  const w = [0, 0, 0];
+  let busy = false, gen = 0, needUpload = false, dead = false;
+  // Coins only exchange forces with the medium between GPU batches, so a fast coin must not
+  // travel more than a fraction of a grid cell per batch or it tunnels through the material.
+  function safeK() {
+    let k = 1e9;
+    for (const cn of cpu.coins) {
+      if (!cn.dropped) continue;
+      cpu.omega(cn, w);
+      const sp = Math.hypot(cn.v[0], cn.v[1], cn.v[2]) + Math.hypot(w[0], w[1], w[2]) * cn.a;
+      k = Math.min(k, Math.floor(0.3 * cpu.DX / Math.max(sp * cpu.DT, 1e-9)));
+    }
+    return Math.max(1, k);
+  }
+  async function frame(K) {
+    if (busy || dead) return;
+    let left = K, guard = 0;
+    while (left > 0 && !dead && guard++ < 64) {
+      const k = Math.min(left, safeK());
+      await chunk(k);
+      left -= k;
+    }
+  }
+  async function chunk(K) {
+    if (busy || dead) return; busy = true;
+    const myGen = gen;
+    try {
+      if (needUpload) { upload(); needUpload = false; }
+      writeParams();
+      const cd = new Float32Array(MAXC * 24);
+      cpu.coins.slice(0, MAXC).forEach((cn, i) => {
+        const o = i * 24, m = cn.Rm; cpu.omega(cn, w);
+        cd.set(cn.c, o); cd[o + 3] = cn.a; cd.set(cn.v, o + 4); cd[o + 7] = cn.h; cd.set(w, o + 8); cd[o + 11] = cn.dropped ? 1 : 0;
+        cd.set([m[0], m[1], m[2]], o + 12); cd.set([m[3], m[4], m[5]], o + 16); cd.set([m[6], m[7], m[8]], o + 20);
+      });
+      dev.queue.writeBuffer(coinB, 0, cd);
+      const enc = dev.createCommandEncoder();
+      enc.clearBuffer(impB);
+      for (let k = 0; k < K; k++) {
+        enc.clearBuffer(gridB);
+        const pass = enc.beginComputePass(); pass.setBindGroup(0, bg);
+        pass.setPipeline(pipes[0]); pass.dispatchWorkgroups(Math.ceil(P / 64));
+        if (tension.sigma > 0) { pass.setPipeline(pipes[1]); pass.dispatchWorkgroups(Math.ceil(NN / 64)); }
+        pass.setPipeline(pipes[2]); pass.dispatchWorkgroups(Math.ceil(NN / 64));
+        pass.setPipeline(pipes[3]); pass.dispatchWorkgroups(Math.ceil(P / 64));
+        pass.end();
+      }
+      enc.copyBufferToBuffer(outB, 0, outStage, 0, P * 16);
+      enc.copyBufferToBuffer(impB, 0, impStage, 0, MAXC * 24);
+      dev.queue.submit([enc.finish()]);
+      await Promise.all([outStage.mapAsync(GPUMapMode.READ), impStage.mapAsync(GPUMapMode.READ)]);
+      if (myGen !== gen || dead) { if (!dead) { outStage.unmap(); impStage.unmap(); } return; }
+      const o = new Float32Array(outStage.getMappedRange()), im = new Int32Array(impStage.getMappedRange());
+      const { px, py, pz, spd } = cpu;
+      for (let p = 0; p < P; p++) { px[p] = o[4 * p]; py[p] = o[4 * p + 1]; pz[p] = o[4 * p + 2]; spd[p] = o[4 * p + 3]; }
+      const imp = cpu.coins.map((_, i) => i < MAXC ? Array.from(im.slice(i * 6, i * 6 + 6), x => x / ISC * cpu.PMASS) : null);
+      outStage.unmap(); impStage.unmap();
+      for (let k = 0; k < K; k++) cpu.coinSubstep(imp, K);
+    } catch (e) { if (!dead) console.warn(e); } finally { busy = false; }
+  }
+  upload();
+  return Object.assign(Object.create(cpu), {
+    gpu: true, frame,
+    setMaterial(m) { Object.assign(mat, m); },
+    setTension(s, n, seed, fingers) { tension.sigma = s; tension.noise = n; tension.seed = seed; tension.fingers = fingers; },
+    freeFall(n) { return busy ? !cpu.dropped ? false : true : cpu.freeFall(n); },
+    resetWater() { cpu.resetWater(); gen++; if (busy) needUpload = true; else upload(); },
+    setTube(t) { tube = t; cpu.setTube(t); },
+    destroy() { dead = true; gen++; [partB, outB, outStage, prmB, gridB, gvB, coinB, impB, impStage, nbB].forEach(b => b.destroy()); }
+  });
+}
+(() => {
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const view = $('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+view.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 30);
+camera.position.set(1.55, 1.1, 1.7);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0.5, 0.25, 0.5); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49; controls.update();
+scene.add(new THREE.HemisphereLight(0xffffff, 0x77685a, 0.55));
+const sun = new THREE.DirectionalLight(0xfff4e0, 0.65); sun.position.set(-1.5, 2.2, 0.8); scene.add(sun);
+
+const S = { running: true, steps: 12, scale: 40, seed: 7, tube: false, dropAt: null };
+let sim = null, simN = 48, building = false;
+const geo = { R: 0.26, depth: 6 / 40, water: 1 };
+const sand = new THREE.MeshStandardMaterial({ roughness: 1, transparent: true, opacity: 0.92 });
+const pitMat = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.BackSide });
+const floorMat = new THREE.MeshStandardMaterial({ roughness: 1 });
+const box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 0.94, 1)), new THREE.LineBasicMaterial({ transparent: true, opacity: 0.18 }));
+box.position.set(0.5, 0.06 + 0.47, 0.5); scene.add(box);
+const tubeMat = new THREE.MeshStandardMaterial({ color: 0xbfd4e0, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false });
+let site = null, tubeMesh = null;
+function buildSite() {
+  if (site) { scene.remove(site); site.traverse(o => o.geometry && o.geometry.dispose()); }
+  site = new THREE.Group(); scene.add(site);
+  const { GY, PB, R } = sim;
+  const nr = 70, na = 180, Rout = 1.7, pos = [], idx = [];
+  for (let i = 0; i <= nr; i++) {
+    const r = R + (Rout - R) * Math.pow(i / nr, 1.6);
+    for (let j = 0; j < na; j++) {
+      const t = j / na * Math.PI * 2, x = 0.5 + r * Math.cos(t), z = 0.5 + r * Math.sin(t);
+      const fade = Math.min(1, Math.max(0, (Rout - r) / 0.35));
+      pos.push(x, GY + (sim.terrainY(x, z) - GY) * fade - (1 - fade) * 0.04, z);
+    }
+  }
+  for (let i = 0; i < nr; i++) for (let j = 0; j < na; j++) {
+    const a = i * na + j, b = i * na + (j + 1) % na, c = a + na, d = b + na;
+    idx.push(a, b, c, b, d, c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  site.add(new THREE.Mesh(g, sand));
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(R, R, GY - PB, 96, 1, true), pitMat);
+  wall.position.set(0.5, (GY + PB) / 2, 0.5); site.add(wall);
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(R, 96), floorMat);
+  floor.rotation.x = -Math.PI / 2; floor.position.set(0.5, PB, 0.5); site.add(floor);
+  tubeMesh = new THREE.Mesh(new THREE.CylinderGeometry(R, R, sim.HY - GY, 96, 1, true), tubeMat);
+  tubeMesh.position.set(0.5, GY + (sim.HY - GY) / 2, 0.5); tubeMesh.visible = S.tube; site.add(tubeMesh);
+  controls.target.set(0.5, GY - 0.05, 0.5);
+  box.scale.y = (sim.HY - PB) / 0.94; box.position.y = PB + (sim.HY - PB) / 2;
+}
+// water particles
+const dot = document.createElement('canvas'); dot.width = dot.height = 32;
+{ const g = dot.getContext('2d'); g.fillStyle = '#fff'; g.beginPath(); g.arc(16, 16, 15, 0, 7); g.fill(); }
+const pMat = new THREE.PointsMaterial({ vertexColors: true, map: new THREE.CanvasTexture(dot), alphaTest: 0.5 });
+let points = null, posAttr, colAttr;
+function buildPoints() {
+  if (points) { scene.remove(points); points.geometry.dispose(); }
+  pMat.size = sim.DX * 0.8;
+  const g = new THREE.BufferGeometry();
+  posAttr = new THREE.BufferAttribute(new Float32Array(sim.P * 3), 3); posAttr.setUsage(THREE.DynamicDrawUsage);
+  colAttr = new THREE.BufferAttribute(new Float32Array(sim.P * 3), 3); colAttr.setUsage(THREE.DynamicDrawUsage);
+  g.setAttribute('position', posAttr); g.setAttribute('color', colAttr);
+  points = new THREE.Points(g, pMat); points.frustumCulled = false; scene.add(points);
+}
+const coinMat = new THREE.MeshStandardMaterial({ metalness: 0, roughness: 0.7 });
+let coinMeshes = [];
+
+const cWater = new THREE.Color(), cFoam = new THREE.Color();
+function applyTheme() {
+  scene.background = new THREE.Color(css('--bg'));
+  sand.color.set(css('--ground')); pitMat.color.set(css('--pit')); floorMat.color.copy(pitMat.color);
+  box.material.color.set(css('--muted')); coinMat.color.set(css('--coin')); 
+  cWater.set(S.medColor || css('--water')); cFoam.set('#eef1f1');
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+applyTheme();
+
+// controls
+const m = v => { const x = v * S.scale; return x.toFixed(x < 10 ? 1 : 0) + ' m'; };
+const sliders = {
+  cnt: v => v, dmin: v => m(+v), dmax: v => m(+v), wgt: v => (+v).toFixed(1) + '× water',
+  hgt: v => m(+v), tlt: v => v + '°', sct: v => Math.round(v * 100) + '% of pit radius', int: v => (+v).toFixed(2) + ' s',
+  spd: v => v + ' steps per frame',
+  pr: v => m(2 * v),
+  sig: v => v == 0 ? 'off' : Math.round(v / 0.03 * 100) + '%', fng: v => v + ' around each impact', fst: v => v == 0 ? 'off' : Math.round(v / 2 * 100) + '%'
+};
+function coinParams() {
+  return { count: +$('cnt').value, dmin: +$('dmin').value, dmax: +$('dmax').value, weight: +$('wgt').value,
+    height: +$('hgt').value, tilt: +$('tlt').value, scatter: +$('sct').value, interval: +$('int').value, seed: S.seed };
+}
+function placeCoins() {
+  sim.setCoins(coinParams());
+  coinMeshes.forEach(c => { scene.remove(c); c.geometry.dispose(); }); 
+  coinMeshes = sim.coins.map(cn => { const me = new THREE.Mesh(new THREE.CylinderGeometry(cn.a, cn.a, cn.h, 48), coinMat); scene.add(me); return me; });
+  syncCoins();
+  $('drop').disabled = false;
+}
+function syncCoins() {
+  sim.coins.forEach((cn, i) => {
+    coinMeshes[i].position.set(cn.c[0], cn.c[1], cn.c[2]); coinMeshes[i].quaternion.set(cn.q[0], cn.q[1], cn.q[2], cn.q[3]);
+  });
+}
+function refreshOutputs() { for (const k in sliders) $('o-' + k).textContent = sliders[k]($(k).value); }
+for (const k in sliders) $(k).addEventListener('input', () => {
+  refreshOutputs();
+  if (k === 'spd') S.steps = +$(k).value;
+  else if (k === 'pr') return;
+  else if (k === 'sig' || k === 'fng' || k === 'fst') applyTension();
+  else if (sim.dropped) reset(); else placeCoins();
+});
+$('hgt').addEventListener('change', () => { if (neededH() !== geo.H) rebuild(); });
+$('pr').addEventListener('change', () => { geo.R = +$('pr').value; rebuild(); });
+$('shuffle').onclick = () => { S.seed++; applyTension(); if (sim.dropped) reset(); else placeCoins(); };
+function setTube(on) {
+  S.tube = on; sim.setTube(on); if (tubeMesh) tubeMesh.visible = on;
+  $('c-tube').setAttribute('aria-pressed', on); $('c-open').setAttribute('aria-pressed', !on);
+  if (!sim.dropped) placeCoins();
+}
+$('c-open').onclick = () => setTube(false);
+$('c-tube').onclick = () => setTube(true);
+document.querySelectorAll('.seg.three button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.seg.three button').forEach(x => x.setAttribute('aria-pressed', x === b));
+  simN = +b.dataset.n; rebuild();
+});
+function neededH() { return Math.max(1, Math.ceil((0.06 + geo.depth + +$('hgt').value + 0.3) * 20) / 20); }
+async function rebuild() {
+  building = true;
+  geo.H = neededH();
+  if (sim && sim.destroy) sim.destroy();
+  const dev = await getDevice();
+  sim = null;
+  if (dev) { try { sim = createGpuSim(dev, simN, geo); } catch (e) { console.warn(e); sim = null; } }
+  if (!sim) { sim = createSim(simN, geo); sim.frame = K => { for (let i = 0; i < K; i++) sim.step(); }; }
+  sim.setTube(S.tube); buildSite(); reset();
+  building = false;
+}
+// ---- medium
+const MEDS = [
+  { name: 'water', label: null },
+  { name: 'viscous', label: 'Viscosity', color: '#b8862f' },
+  { name: 'sand', label: 'Friction', color: '#b09468' },
+  { name: 'clay', label: 'Firmness', color: '#9a6a52' }
+];
+S.med = 0; S.matv = { 1: 0.3, 2: 0.33, 3: 0.3 };
+function materialParams() {
+  const t = S.matv[S.med] ?? 0;
+  if (S.med === 1) return { medium: 1, visc: 0.001 + t * 0.029, fric: 0, yieldv: 0 };
+  if (S.med === 2) return { medium: 2, visc: 0, fric: 0.3 + t * 0.9, yieldv: 0 };
+  if (S.med === 3) return { medium: 3, visc: 0.01, fric: 0.6, yieldv: 0.03 + t * 0.17 };
+  return { medium: 0, visc: 0, fric: 0, yieldv: 0 };
+}
+function applyMaterial() {
+  if (sim && sim.setMaterial) sim.setMaterial(materialParams());
+  const md = MEDS[S.med];
+  $('matrow').hidden = !md.label;
+  if (md.label) { $('matlabel').textContent = md.label; $('mat').value = S.matv[S.med]; $('o-mat').textContent = Math.round(S.matv[S.med] * 100) + '%'; }
+  const gpu = !!(sim && sim.gpu);
+  if (!gpu && S.med) { S.med = 0; return applyMaterial(); }
+  S.medColor = md.color || null; cWater.set(md.color || css('--water'));
+  document.querySelectorAll('[data-med]').forEach(b => { b.setAttribute('aria-pressed', +b.dataset.med === S.med); b.disabled = !gpu && +b.dataset.med !== 0; });
+}
+document.querySelectorAll('[data-med]').forEach(b => b.onclick = () => { S.med = +b.dataset.med; applyMaterial(); applyTension(); reset(); });
+$('mat').addEventListener('input', () => { S.matv[S.med] = +$('mat').value; applyMaterial(); });
+
+// ---- timeline: snapshots kept in memory so any recorded moment can be revisited and exported
+const TL = { frames: [], view: null, lastT: -1, budget: 250e6 };
+function tlClear() { TL.frames = []; TL.view = null; TL.lastT = -1; $('tl').hidden = true; $('stat').style.bottom = ''; }
+function tlRecord() {
+  if (!sim.dropped || sim.time === TL.lastT) return;
+  TL.lastT = sim.time;
+  const P = sim.P, pos = new Float32Array(P * 3), sp = new Uint8Array(P), { px, py, pz, spd } = sim;
+  for (let p = 0; p < P; p++) { pos[3 * p] = px[p]; pos[3 * p + 1] = py[p]; pos[3 * p + 2] = pz[p]; sp[p] = Math.min(255, spd[p] * 100); }
+  const cs = new Float32Array(sim.coins.length * 7);
+  sim.coins.forEach((c, i) => { cs.set(c.c, i * 7); cs.set(c.q, i * 7 + 3); });
+  TL.frames.push({ t: sim.time, pos, sp, cs });
+  if (TL.frames.length * P * 13 > TL.budget) TL.frames = TL.frames.filter((_, i) => i % 2 === 0 || i === TL.frames.length - 1);
+  const r = $('tlr'); r.max = TL.frames.length - 1; if (TL.view === null) r.value = r.max;
+  if (TL.frames.length > 1 && $('tl').hidden) { $('tl').hidden = false; $('stat').style.bottom = '62px'; }
+  $('tltime').textContent = (TL.view === null ? sim.time : TL.frames[TL.view].t).toFixed(2) + ' s';
+}
+$('tlr').addEventListener('input', () => {
+  TL.view = +$('tlr').value; S.running = false; $('pause').textContent = 'Resume';
+  $('tltime').textContent = TL.frames[TL.view].t.toFixed(2) + ' s';
+});
+function tlSnapshot() {
+  if (TL.view === null) return null;
+  const f = TL.frames[TL.view], P = f.sp.length, px = new Float32Array(P), py = new Float32Array(P), pz = new Float32Array(P);
+  for (let p = 0; p < P; p++) { px[p] = f.pos[3 * p]; py[p] = f.pos[3 * p + 1]; pz[p] = f.pos[3 * p + 2]; }
+  return { P, px, py, pz, t: f.t, f };
+}
+function quatMat(q) {
+  const [x, y, z, w] = q;
+  return [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w), 2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w), 2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)];
+}
+function applyTension() {
+  if (sim && sim.setTension) sim.setTension(+$('sig').value, +$('fst').value, S.seed * 7919 + 13, +$('fng').value);
+  const off = !(sim && sim.gpu) || S.med >= 2;
+  for (const k of ['sig', 'fng', 'fst']) $(k).disabled = off;
+  if (sim && sim.setTension && S.med >= 2) sim.setTension(0, 0, 1, 16);
+}
+function reset() { tlClear(); applyMaterial(); applyTension(); S.dropAt = null; sim.resetWater(); buildPoints(); placeCoins(); S.running = true; $('pause').textContent = 'Pause'; }
+$('drop').onclick = () => { sim.drop(); S.dropAt = performance.now(); $('drop').disabled = true; S.running = true; $('pause').textContent = 'Pause'; };
+$('pause').onclick = () => { if (!S.running && TL.view !== null) { TL.view = null; $('tlr').value = $('tlr').max; } S.running = !S.running; $('pause').textContent = S.running ? 'Pause' : 'Resume'; };
+$('reset').onclick = reset;
+
+// export
+let downloads = null;
+if (window.claude && claude.use) claude.use('downloads').then(d => { downloads = d; }).catch(() => {});
+function toRhino(x, y, z) { const s = S.scale; return [((x - 0.5) * s).toFixed(4), (-(z - 0.5) * s).toFixed(4), (y * s).toFixed(4)].join(' '); }
+async function exportFrame() {
+  const note = $('note');
+  if (!downloads) { note.textContent = 'Saving files is not available in this view. Open the published page in Claude to export.'; return; }
+  note.textContent = 'Meshing the surface…';
+  await new Promise(r => setTimeout(r, 30));
+  const snap = tlSnapshot(), T = snap ? snap.t : sim.time, med = MEDS[S.med].name;
+  const out = [`# coin drop frame t=${T.toFixed(3)} s, ${med}, Z-up, metres`];
+  let vo = 0;
+  const w = sim.waterSurface(snap || undefined);
+  out.push(`o ${med}_mesh`, `g ${med}_mesh`);
+  for (let i = 0; i < w.verts.length; i += 3) out.push('v ' + toRhino(w.verts[i], w.verts[i + 1], w.verts[i + 2]));
+  for (const f of w.faces) out.push('f ' + f.map(i => vo + i + 1).join(' '));
+  vo += w.verts.length / 3;
+  out.push(`o ${med}_points`, `g ${med}_points`);
+  const { px, py, pz, P } = snap || sim;
+  for (let p = 0; p < P; p++) out.push('v ' + toRhino(px[p], py[p], pz[p]));
+  for (let p = 0; p < P; p += 1000) out.push('p ' + Array.from({ length: Math.min(1000, P - p) }, (_, k) => vo + p + k + 1).join(' '));
+  vo += P;
+  const seg = 32;
+  sim.coins.forEach((c0, ci) => {
+    const c = snap ? { a: c0.a, h: c0.h, c: Array.from(snap.f.cs.slice(ci * 7, ci * 7 + 3)) } : c0;
+    const rm = snap ? quatMat(Array.from(snap.f.cs.slice(ci * 7 + 3, ci * 7 + 7))) : c0.Rm; out.push(`o coin_${ci + 1}`, 'g coins');
+    for (const side of [-1, 1]) for (let k = 0; k < seg; k++) {
+      const t = k / seg * Math.PI * 2, lx = Math.cos(t) * c.a, ly = side * c.h / 2, lz = Math.sin(t) * c.a;
+      out.push('v ' + toRhino(c.c[0] + rm[0] * lx + rm[1] * ly + rm[2] * lz, c.c[1] + rm[3] * lx + rm[4] * ly + rm[5] * lz, c.c[2] + rm[6] * lx + rm[7] * ly + rm[8] * lz));
+    }
+    for (let k = 0; k < seg; k++) { const a = vo + k + 1, b = vo + (k + 1) % seg + 1; out.push(`f ${a} ${b} ${b + seg} ${a + seg}`); }
+    out.push('f ' + Array.from({ length: seg }, (_, k) => vo + seg - k).join(' '));
+    out.push('f ' + Array.from({ length: seg }, (_, k) => vo + seg + k + 1).join(' '));
+    vo += 2 * seg;
+  });
+  out.push('o pit_rim', 'g pit');
+  const n = 96;
+  for (let k = 0; k < n; k++) { const t = k / n * Math.PI * 2; out.push('v ' + toRhino(0.5 + sim.R * Math.cos(t), sim.GY, 0.5 + sim.R * Math.sin(t))); }
+  out.push('l ' + Array.from({ length: n + 1 }, (_, k) => vo + k % n + 1).join(' '));
+  const name = `coin-drop-${med}-t${T.toFixed(3).replace('.', '_')}.obj`;
+  const zip = new JSZip(); zip.file(name, out.join('\n') + '\n');
+  const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+  try {
+    await downloads.save({ filename: name.replace('.obj', '.zip'), data: blob });
+    note.textContent = `Saved ${name}: ${w.faces.length} faces and ${P} points.`;
+  } catch (e) {
+    note.textContent = e && e.code === 'declined' ? 'Export cancelled.' : 'Export failed: ' + (e && e.message || 'unknown error');
+  }
+}
+$('export').onclick = () => { S.running = false; $('pause').textContent = 'Resume'; exportFrame(); };
+
+// loop
+function resize() { const w = view.clientWidth, h = view.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(view);
+let last = performance.now(), fps = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  if (!sim || building || !posAttr) return;
+  // one constant playback speed for everything: every coin falls, and the water moves, at the same rate
+  if (S.running && !sim.freeFall(S.steps)) sim.frame(S.steps);
+  tlRecord();
+  const vf = TL.view !== null ? TL.frames[TL.view] : null, foam = S.med === 0 ? 1 : 0.25;
+  const P = sim.P, pa = posAttr.array, ca = colAttr.array, { px, py, pz, spd, GY, PB } = sim;
+  for (let p = 0; p < P; p++) {
+    if (vf) { pa[3 * p] = vf.pos[3 * p]; pa[3 * p + 1] = vf.pos[3 * p + 1]; pa[3 * p + 2] = vf.pos[3 * p + 2]; }
+    else { pa[3 * p] = px[p]; pa[3 * p + 1] = py[p]; pa[3 * p + 2] = pz[p]; }
+    const sv = vf ? vf.sp[p] / 100 : spd[p], s = foam * Math.min(1, sv / 1.8), d = 0.72 + 0.28 * Math.min(1, Math.max(0, (pa[3 * p + 1] - PB) / (GY - PB)));
+    ca[3 * p] = (cWater.r + (cFoam.r - cWater.r) * s) * d; ca[3 * p + 1] = (cWater.g + (cFoam.g - cWater.g) * s) * d; ca[3 * p + 2] = (cWater.b + (cFoam.b - cWater.b) * s) * d;
+  }
+  posAttr.needsUpdate = true; colAttr.needsUpdate = true;
+  syncCoins();
+  if (vf) sim.coins.forEach((c, i) => { coinMeshes[i].position.fromArray(vf.cs, i * 7); coinMeshes[i].quaternion.fromArray(vf.cs, i * 7 + 3); });
+  controls.update(); renderer.render(scene, camera);
+  fps = fps * 0.9 + 100 / Math.max(1, now - last); last = now;
+  $('stat').textContent = `${sim.gpu ? 'GPU' : 'CPU'} — ${P.toLocaleString()} particles, ${sim.coins.length} coins — t = ${sim.time.toFixed(2)} s — ${fps.toFixed(0)} fps — playing at ${Math.min(100, S.steps * sim.DT * Math.max(fps, 1) * 100).toFixed(0)}% of real time`;
+}
+refreshOutputs(); resize(); requestAnimationFrame(frame);
+rebuild();
+})();
+</script></body></html>
